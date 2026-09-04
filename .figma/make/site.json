@@ -1,0 +1,10 @@
+{
+  "description": "An e-commerce platform showcasing curated products and experiences with seamless navigation, tailored for lifestyle and wedding shoppers.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
