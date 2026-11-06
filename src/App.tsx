@@ -1065,7 +1065,7 @@ function ProductCard({
       onClick={() => onSelect?.(name)}
       className="group flex-shrink-0 w-full flex flex-col text-left"
     >
-      <div className="relative aspect-[3/4] overflow-hidden bg-[#f5f0eb] mb-3 rounded-sm">
+      <div className="relative aspect-[3/4] overflow-hidden bg-[#f5f0eb] mb-3">
         {tag && (
           <span className="absolute top-3 left-3 z-10 font-sans text-[10px] font-semibold tracking-[1.5px] bg-black text-white px-2.5 py-1 rounded-full">
             {tag}
@@ -1260,7 +1260,7 @@ function ShopByCategory() {
           <a
             key={cat.name}
             href={cat.href}
-            className="group relative aspect-[2/3] overflow-hidden rounded-sm bg-[#f0ebe5] block"
+            className="group relative aspect-[2/3] overflow-hidden bg-[#f0ebe5] block"
           >
             <img
               src={cat.image}
@@ -1573,7 +1573,7 @@ function Blog() {
         {blogPosts.map((post, i) => (
           <a key={i} href="#" className="group block">
             {/* Image */}
-            <div className="relative aspect-[4/3] overflow-hidden bg-[#f5f0eb] mb-5 rounded-sm">
+            <div className="relative aspect-[4/3] overflow-hidden bg-[#f5f0eb] mb-5">
               <img
                 src={post.image}
                 alt={post.title}
@@ -1936,12 +1936,8 @@ function Footer() {
   );
 }
 
-function ProductDetailPage({
-  product,
-  onBack,
-}: {
+function ProductDetailPage({ product }: {
   product: (typeof productCatalog)[number];
-  onBack: () => void;
 }) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [customizationValues, setCustomizationValues] = useState<
@@ -1963,6 +1959,9 @@ function ProductDetailPage({
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const [hasApprovedProof, setHasApprovedProof] = useState(false);
+  const [activeInfoTab, setActiveInfoTab] = useState<"description" | "details">(
+    "description",
+  );
 
   const relatedProducts = productCatalog
     .filter((item) => item.name !== product.name)
@@ -1974,6 +1973,9 @@ function ProductDetailPage({
 
   const customizationFields = product.customization ?? [];
   const hasCustomization = customizationFields.length > 0;
+  const showGalleryThumbnails =
+    product.gallery.length > 1 &&
+    !customizationFields.some((field) => field.type === "visual");
   const isCustomizationComplete = customizationFields.every(
     (field) => customizationValues[field.name]?.trim(),
   );
@@ -1990,19 +1992,9 @@ function ProductDetailPage({
     <div className="bg-white min-h-screen">
       <Navigation />
       <main className="mx-auto max-w-[1400px] px-6 py-8 md:px-10 md:py-10">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-2 font-sans text-[13px] font-semibold uppercase tracking-[1.6px] text-black/70 hover:text-[#e8191a] transition-colors"
-        >
-          <span aria-hidden="true">←</span>
-          Back to shop
-        </button>
-
-        <div className="mt-8 grid gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12">
+        <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_0.92fr] lg:gap-16">
           <div>
-            <div className="overflow-hidden rounded-[28px] bg-white shadow-[0_20px_60px_rgba(17,17,17,0.06)]">
-              {(() => {
+            {(() => {
                 const visualField = customizationFields.find(
                   (field) => field.type === "visual",
                 );
@@ -2020,11 +2012,15 @@ function ProductDetailPage({
                   product.image;
 
                 return (
-                  <div className="relative">
+                  <div
+                    className={`relative aspect-square ${
+                      showGalleryThumbnails ? "mx-auto w-4/5" : "w-full"
+                    } overflow-hidden bg-[#f5f0eb]`}
+                  >
                     <img
                       src={previewImage}
                       alt={product.name}
-                      className="h-[520px] w-full object-cover md:h-[640px]"
+                      className="absolute inset-0 h-full w-full object-cover"
                     />
                     {product.name === "Personal Stationery Set" && (
                       <span
@@ -2052,42 +2048,41 @@ function ProductDetailPage({
                   </div>
                 );
               })()}
-            </div>
-            {product.gallery.length > 1 &&
-              !customizationFields.some((field) => field.type === "visual") && (
-                <div className="mt-4 grid grid-cols-4 gap-3">
-                  {product.gallery.map((image, index) => (
-                    <button
-                      key={`${product.name}-${index}`}
-                      type="button"
-                      onClick={() => setSelectedImageIndex(index)}
-                      className={`overflow-hidden rounded-xl border transition-all ${
-                        index === selectedImageIndex
-                          ? "border-black shadow-md"
-                          : "border-black/10 hover:border-black/30"
-                      }`}
-                    >
-                      <img
-                        src={image}
-                        alt={`${product.name} view ${index + 1}`}
-                        className="h-24 w-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
+            {showGalleryThumbnails && (
+              <div className="mx-auto mt-4 grid w-4/5 grid-cols-4 gap-3">
+                {product.gallery.map((image, index) => (
+                  <button
+                    key={`${product.name}-${index}`}
+                    type="button"
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`overflow-hidden border transition-all ${
+                      index === selectedImageIndex
+                        ? "border-black shadow-md"
+                        : "border-black/10 hover:border-black/30"
+                    }`}
+                    aria-pressed={index === selectedImageIndex}
+                  >
+                    <img
+                      src={image}
+                      alt={`${product.name} view ${index + 1}`}
+                      className="h-20 w-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="pt-2 md:pt-6">
+          <div>
             <p className="font-sans text-[11px] font-semibold uppercase tracking-[2px] text-[#e8191a]">
               {product.category}
             </p>
-            <h1 className="mt-3 font-display text-[42px] leading-none text-black md:text-[54px]">
+            <h1 className="mt-3 font-display text-[34px] leading-tight text-black md:text-[42px]">
               {product.name}
             </h1>
 
             <div className="mt-5 flex items-center gap-4">
-              <span className="font-sans text-[34px] font-semibold text-black">
+              <span className="font-sans text-[22px] font-medium text-black md:text-[24px]">
                 {product.price}
               </span>
               {!hasCustomization && (
@@ -2097,18 +2092,14 @@ function ProductDetailPage({
               )}
             </div>
 
-            <p className="mt-5 max-w-[520px] font-sans text-[16px] leading-relaxed text-black/65">
-              {product.description}
-            </p>
-
-            <div className="mt-7 space-y-5 rounded-2xl border border-black/10 bg-white p-5">
+            <div className="mt-7 divide-y divide-black/10 border-y border-black/10 bg-white">
               {customizationFields.map((field) => (
-                <div key={field.name}>
+                <div key={field.name} className="py-4">
                   {field.type === "text" ? (
                     <>
                       <label
                         htmlFor={`${product.name}-${field.name}`}
-                        className="mb-2 block font-sans text-[12px] font-semibold uppercase tracking-[2px] text-black/45"
+                        className="mb-2 block font-sans text-[14px] font-medium text-black"
                       >
                         {field.label}
                       </label>
@@ -2126,12 +2117,12 @@ function ProductDetailPage({
                         placeholder={field.placeholder}
                         required
                         aria-required="true"
-                        className="w-full rounded-xl border border-black/15 bg-[#f9f5f2] px-4 py-3 font-sans text-[15px] text-black placeholder:text-black/35 focus:border-[#e8191a] focus:outline-none"
+                        className="w-full border border-black/20 bg-white px-4 py-3 font-sans text-[14px] text-black placeholder:text-black/35 focus:border-black focus:outline-none"
                       />
                     </>
                   ) : field.type === "visual" ? (
                     <>
-                      <p className="mb-2 font-sans text-[12px] font-semibold uppercase tracking-[2px] text-black/45">
+                      <p className="mb-2 font-sans text-[14px] font-medium text-black">
                         {field.label}
                       </p>
                       <div className="grid grid-cols-2 gap-3">
@@ -2148,7 +2139,7 @@ function ProductDetailPage({
                             aria-pressed={
                               customizationValues[field.name] === option.label
                             }
-                            className={`overflow-hidden rounded-xl border text-left transition-all ${
+                            className={`overflow-hidden border text-left transition-all ${
                               customizationValues[field.name] === option.label
                                 ? "border-black ring-1 ring-black"
                                 : "border-black/15 hover:border-black/30"
@@ -2168,7 +2159,7 @@ function ProductDetailPage({
                     </>
                   ) : field.type === "choice" ? (
                     <>
-                      <p className="mb-2 font-sans text-[12px] font-semibold uppercase tracking-[2px] text-black/45">
+                      <p className="mb-2 font-sans text-[14px] font-medium text-black">
                         {field.label}
                       </p>
                       <div
@@ -2186,7 +2177,7 @@ function ProductDetailPage({
                             aria-pressed={
                               customizationValues[field.name] === option
                             }
-                            className={`rounded-xl border px-4 py-3 font-sans text-[13px] transition-all ${
+                            className={`rounded-full border px-4 py-2 font-sans text-[12px] font-semibold uppercase tracking-[1px] transition-all ${
                               customizationValues[field.name] === option
                                 ? "border-black bg-black text-white"
                                 : "border-black/15 bg-white text-black/75 hover:border-black/30"
@@ -2198,34 +2189,43 @@ function ProductDetailPage({
                       </div>
                     </>
                   ) : (
-                    <label className="block">
-                      <span className="mb-2 block font-sans text-[12px] font-semibold uppercase tracking-[2px] text-black/45">
+                    <div>
+                      <span className="mb-2 block font-sans text-[14px] font-medium text-black">
                         {field.label}
                       </span>
-                      <select
-                        value={customizationValues[field.name] ?? ""}
-                        onChange={(event) =>
-                          updateCustomizationValue(
-                            field.name,
-                            event.target.value,
-                          )
-                        }
-                        className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 font-sans text-[15px] text-black focus:border-[#e8191a] focus:outline-none"
+                      <div
+                        className="flex flex-wrap gap-2"
+                        role="group"
+                        aria-label={field.label}
                       >
                         {field.options.map((option) => (
-                          <option key={option} value={option}>
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() =>
+                              updateCustomizationValue(field.name, option)
+                            }
+                            aria-pressed={
+                              customizationValues[field.name] === option
+                            }
+                            className={`rounded-full border px-4 py-2 font-sans text-[12px] font-semibold uppercase tracking-[1px] transition-all ${
+                              customizationValues[field.name] === option
+                                ? "border-black bg-black text-white"
+                                : "border-black/20 bg-white text-black hover:border-black/50"
+                            }`}
+                          >
                             {option}
-                          </option>
+                          </button>
                         ))}
-                      </select>
-                    </label>
+                      </div>
+                    </div>
                   )}
                 </div>
               ))}
 
               {product.colors.length > 0 && (
-                <div>
-                  <p className="mb-2 font-sans text-[12px] font-semibold uppercase tracking-[2px] text-black/45">
+                <div className="py-4">
+                  <p className="mb-2 font-sans text-[14px] font-medium text-black">
                     Colour
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -2234,7 +2234,8 @@ function ProductDetailPage({
                         key={color}
                         type="button"
                         onClick={() => setSelectedColor(color)}
-                        className={`rounded-full border px-3 py-1.5 font-sans text-[13px] transition-all ${
+                        aria-pressed={selectedColor === color}
+                        className={`rounded-full border px-4 py-2 font-sans text-[12px] font-semibold uppercase tracking-[1px] transition-all ${
                           selectedColor === color
                             ? "border-black bg-black text-white"
                             : "border-black/15 bg-white text-black/75 hover:border-black/30"
@@ -2248,8 +2249,8 @@ function ProductDetailPage({
               )}
 
               {!hasCustomization && sizeOptions.length > 0 && (
-                <div>
-                  <p className="mb-2 font-sans text-[12px] font-semibold uppercase tracking-[2px] text-black/45">
+                <div className="py-4">
+                  <p className="mb-2 font-sans text-[14px] font-medium text-black">
                     Size
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -2258,7 +2259,8 @@ function ProductDetailPage({
                         key={option}
                         type="button"
                         onClick={() => setSelectedSize(option)}
-                        className={`rounded-full border px-3 py-1.5 font-sans text-[13px] transition-all ${
+                        aria-pressed={selectedSize === option}
+                        className={`rounded-full border px-4 py-2 font-sans text-[12px] font-semibold uppercase tracking-[1px] transition-all ${
                           selectedSize === option
                             ? "border-black bg-black text-white"
                             : "border-black/15 bg-white text-black/75 hover:border-black/30"
@@ -2271,8 +2273,8 @@ function ProductDetailPage({
                 </div>
               )}
 
-              <div>
-                <p className="mb-2 font-sans text-[12px] font-semibold uppercase tracking-[2px] text-black/45">
+              <div className="py-4">
+                <p className="mb-2 font-sans text-[14px] font-medium text-black">
                   Quantity
                 </p>
                 <div className="flex w-fit items-center overflow-hidden rounded-full border border-black/15 bg-white">
@@ -2334,7 +2336,7 @@ function ProductDetailPage({
                 type="button"
                 onClick={() => setIsAdded(true)}
                 disabled={!canAddToCart}
-                className="inline-flex items-center justify-center rounded-full px-7 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+                className="inline-flex items-center justify-center rounded-full px-7 py-3 text-[13px] font-semibold uppercase tracking-[1px] text-white transition-opacity hover:opacity-90"
                 style={{
                   backgroundColor: PINK,
                   opacity: canAddToCart ? 1 : 0.45,
@@ -2346,7 +2348,7 @@ function ProductDetailPage({
               <button
                 type="button"
                 disabled={!canAddToCart}
-                className="inline-flex items-center justify-center rounded-full border border-black/20 bg-white px-7 py-3 text-[14px] font-semibold text-black transition-colors hover:border-black/40"
+                className="inline-flex items-center justify-center rounded-full border border-black/20 bg-white px-7 py-3 text-[13px] font-semibold uppercase tracking-[1px] text-black transition-colors hover:border-black/40"
                 style={{
                   opacity: canAddToCart ? 1 : 0.45,
                   cursor: canAddToCart ? "pointer" : "not-allowed",
@@ -2356,40 +2358,116 @@ function ProductDetailPage({
               </button>
             </div>
 
-            {product.details.length > 0 && (
-              <ul className="mt-8 space-y-3 border-t border-black/10 pt-6">
-                {product.details.map((detail) => (
-                  <li
-                    key={detail}
-                    className="flex items-start gap-3 font-sans text-[15px] text-black/75"
-                  >
-                    <span
-                      className="mt-1 h-2 w-2 rounded-full"
-                      style={{ backgroundColor: PINK }}
-                    />
-                    <span>{detail}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <div className="mt-8">
+              <div
+                className="flex gap-6 border-b border-black/15"
+                role="tablist"
+                aria-label="Product information"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  id="product-description-tab"
+                  aria-selected={activeInfoTab === "description"}
+                  aria-controls="product-info-panel"
+                  onClick={() => setActiveInfoTab("description")}
+                  className={`border-b-2 pb-3 font-sans text-[11px] font-semibold uppercase tracking-[1.5px] transition-colors ${
+                    activeInfoTab === "description"
+                      ? "border-black text-black"
+                      : "border-transparent text-black/50 hover:text-black"
+                  }`}
+                >
+                  Description
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  id="product-details-tab"
+                  aria-selected={activeInfoTab === "details"}
+                  aria-controls="product-info-panel"
+                  onClick={() => setActiveInfoTab("details")}
+                  className={`border-b-2 pb-3 font-sans text-[11px] font-semibold uppercase tracking-[1.5px] transition-colors ${
+                    activeInfoTab === "details"
+                      ? "border-black text-black"
+                      : "border-transparent text-black/50 hover:text-black"
+                  }`}
+                >
+                  Product details
+                </button>
+              </div>
+              <div
+                id="product-info-panel"
+                role="tabpanel"
+                aria-labelledby={
+                  activeInfoTab === "description"
+                    ? "product-description-tab"
+                    : "product-details-tab"
+                }
+                className="py-5 font-sans text-[14px] leading-relaxed text-black/70"
+              >
+                {activeInfoTab === "description" ? (
+                  <p>{product.description}</p>
+                ) : product.details.length > 0 ? (
+                  <ul className="space-y-2">
+                    {product.details.map((detail) => (
+                      <li key={detail}>{detail}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>
+                    Choose your design, lettering style, ink colour, and name
+                    to make this stationery set your own.
+                  </p>
+                )}
+              </div>
+            </div>
 
-            <div className="mt-8 rounded-2xl border border-black/10 bg-white p-5">
-              <div className="flex items-center justify-between gap-2 border-b border-black/10 pb-3">
-                <span className="font-sans text-[12px] font-semibold uppercase tracking-[2px] text-black/45">
-                  Delivery
-                </span>
-                <span className="font-sans text-[13px] font-medium text-black">
-                  Ships in 3–5 days
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-2 pt-3">
-                <span className="font-sans text-[12px] font-semibold uppercase tracking-[2px] text-black/45">
-                  Returns
-                </span>
-                <span className="font-sans text-[13px] font-medium text-black">
-                  30-day easy returns
-                </span>
-              </div>
+            <div className="border-t border-black/10">
+              <details className="group border-b border-black/10">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 font-sans text-[15px] font-medium text-black [&::-webkit-details-marker]:hidden">
+                  Shipping &amp; Returns
+                  <span className="text-[20px] font-light text-black/60 transition-transform group-open:rotate-45">
+                    +
+                  </span>
+                </summary>
+                <div className="space-y-2 pb-5 font-sans text-[14px] leading-relaxed text-black/65">
+                  <p>Ships in 3–5 days.</p>
+                  <p>30-day easy returns.</p>
+                </div>
+              </details>
+              <details className="group border-b border-black/10">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 font-sans text-[15px] font-medium text-black [&::-webkit-details-marker]:hidden">
+                  FAQ
+                  <span className="text-[20px] font-light text-black/60 transition-transform group-open:rotate-45">
+                    +
+                  </span>
+                </summary>
+                <div className="space-y-4 pb-5 font-sans text-[14px] leading-relaxed text-black/65">
+                  <div>
+                    <p className="font-medium text-black">
+                      How long does delivery take?
+                    </p>
+                    <p>Orders ship in 3–5 days.</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-black">
+                      Can I return my order?
+                    </p>
+                    <p>We offer 30-day easy returns.</p>
+                  </div>
+                  {hasCustomization && (
+                    <div>
+                      <p className="font-medium text-black">
+                        Can I change my personalized order after approval?
+                      </p>
+                      <p>
+                        Please review your personalization carefully before
+                        approving. Edits cannot be made after approval.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </details>
             </div>
           </div>
         </div>
@@ -2698,7 +2776,7 @@ function BlogPage() {
           {blogArticles.map((article) => (
             <article key={article.title} className="group">
               <a href="#" className="block">
-                <div className="relative aspect-[4/3] overflow-hidden bg-[#f5f0eb] mb-5 rounded-sm">
+                <div className="relative aspect-[4/3] overflow-hidden bg-[#f5f0eb] mb-5">
                   <img
                     src={article.image}
                     alt={article.title}
@@ -2925,14 +3003,6 @@ export default function App() {
         <ProductDetailPage
           key={product.name}
           product={product}
-          onBack={() => {
-            window.history.pushState(
-              {},
-              "",
-              window.location.pathname + window.location.search,
-            );
-            window.dispatchEvent(new HashChangeEvent("hashchange"));
-          }}
         />
       );
     }
